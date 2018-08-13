@@ -1,0 +1,8 @@
+<!--pages/theme/theme.wxml-->
+<import src="../tpls/products/products-tpl.wxml" />
+<view class='container'>
+  <view class='theme-header'>
+    <image src='{{themeInfo.head_img.url}}' mode='aspectFill'></image>
+  </view>
+  <template is='products' data='{{products:themeInfo.products}}'></template>
+</view>

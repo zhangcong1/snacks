@@ -1,0 +1,68 @@
+<!--pages/product/product.wxml-->
+
+<view class='container detai-container'>
+  <view class='detail-header-box'>
+
+    <view class='fixed-btns-box' bindtap='onCartTap'>
+      <view class='fiexd-cart'>
+        <image src='../../imgs/icon/cart@top.png'></image>
+        <view wx:if="{{cartTotalCount>0}}">{{cartTotalCount}}</view>
+      </view>
+    </view>
+
+    <view class='detail-topic-img'>
+      <image src='{{product.main_img_url}}' mode='aspectFit'></image>
+    </view>
+
+    <view class='cart-box'>
+      <view class='product-counts'>
+        <picker class='{{product.stock==0?"disabled":""}}' range='{{countsArr}}' bindchange='bindPickerChange'>
+          <view>
+            <text class='counts-tips'>数量</text>
+            <text class='counts-data'>{{productCount}}</text>
+            <image class='counts-icon' src='../../imgs/icon/arrow@down.png'></image>
+          </view>
+        </picker>
+      </view>
+      <view class='middle-border'></view>
+      <view class='add-cart-btn {{product.stock==0?"disabled":""}}' bindtap='onAddingToCartTap'>
+        <text>加入购物车</text>
+        <image class='cart-icon' src='../../imgs/icon/cart.png'></image>
+      </view>
+    </view>
+
+    <view class='basic-info-box'>
+      <view class='stock' wx:if='{{product.stock>0}}'>有货</view>
+      <view class='stock no' wx:else>缺货</view>
+      <view class='name'>{{product.name}}</view>
+      <view class='price'>￥{{product.price}}</view>
+    </view>
+
+  </view>
+  <view style='height:30rpx;background:#F9F9F9'></view>
+  <view class='detail-bottom-box'>
+    <view class='tabs-box'>
+      <block wx:for='{{["商品详情","产品参数","售后保障"]}}' wx:key='index'>
+        <view class='tabs-item {{currentTabsIndex==index?"selected":""}}' bindtap='onTabsItemTap' data-index='{{index}}'>{{item}}</view>
+      </block>
+    </view>
+    <view class='product-detail-box'>
+      <view hidden='{{currentTabsIndex!=0}}' class='product-detail-imgs'>
+        <block wx:for='{{product.product_img}}' wx:key='index'>
+          <image src='{{item.img.url}}'></image>
+        </block>
+      </view>
+      <view hidden='{{currentTabsIndex!=1}}' class='product-detail-properties'>
+        <block wx:for='{{product.property}}' wx:key='index'>
+        <view class='properties-item'>
+          <view class='properties-name'>{{item.name}}</view>
+          <view class='properties-detail'>{{item.detail}}</view>
+        </view>
+        </block>
+      </view>
+      <view class='product-detail-protect' hidden='{{currentTabsIndex!=2}}'>
+        <view>七天无理由免费退货</view>
+      </view>
+    </view>
+  </view>
+</view>
