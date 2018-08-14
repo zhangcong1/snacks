@@ -71,6 +71,6 @@
     <view class="total-account">
       付款合计：￥{{account}}
     </view>
-    <view wx:if="{{orderStatus<=1}}" class="pay {{!addressInfo?'disabled':''}}" ontap="pay">去付款</view>
+    <view wx:if="{{orderStatus<=1}}" class="pay {{!addressInfo?'disabled':''}}" bindtap="pay">去付款</view>
   </view>
 </view>

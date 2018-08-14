@@ -11,7 +11,7 @@ Page({
    * 页面的初始数据
    */
   data: {
-  
+    id: -1
   },
 
   /**
@@ -74,6 +74,69 @@ Page({
     })
   },
 
+  pay:function(){
+    if (!this.data.addressInfo){
+      this.showTips('下单提示','请填写您的收货地址');
+      return;
+    }
+    if(this.data.orderStatus == 0){
+      this._firstTimePay();
+    }else{
+      this._oneMoresTimePay();
+    }
+  },
+
+  _firstTimePay:function(){
+    var orderInfo = [];
+    var productInfo = this.data.productsArr;
+    var order = new Order();
+    for(let i=0;i<productInfo.length;i++){
+      orderInfo.push({
+        product_id: productInfo[i].id,
+        counts: productInfo[i].counts
+      })
+    }
+    var that = this;
+    //支付分两步，第一步生成订单号，然后根据订单号支付
+    order.doOrder(orderInfo,(data)=>{
+      //订单生成成功
+      if(data.pass){
+        //更新订单状态
+        var id = data.order_id;
+        that.data.id = id;
+        that.data.fromCartFlag = false;
+        //开始支付
+        that._execPay(id);
+      }else{
+        that._orderFail(data);
+      }
+    })
+  },
+  _execPay:function(id){
+    var that = this;
+    order.execPay(id,(statusCode)=>{
+      if(statusCode != 0){
+        //将已经下单的商品从购物车删除  
+        that.deleteProducts();
+        var flag = statusCode == 2;
+        wx.navigateTo({
+          url: '../pay-result/pay-result?id=' + id + '&flag=' + flag + '&from=order',
+        })
+      }
+    })
+  },
+  deleteProducts:function(){
+    var ids = [],
+    arr = this.data.productsArr;
+    for (let i=0;i<arr.length;i++){
+      ids.push(arr[i].id);
+    }
+    cart.delete(ids);
+  },
+  _oneMoresTimePay:function(){
+
+  },
+
   /**
    * 生命周期函数--监听页面初次渲染完成
    */
@@ -85,7 +148,26 @@ Page({
    * 生命周期函数--监听页面显示
    */
   onShow: function () {
-  
+    if(this.data.id){
+      var that = this;
+      //下单后，支付成功或者失败后，点左上角返回时能够更新订单状态，所以放在onshow中
+      var id = this.data.id;
+      order.getOrderInfoById(id,(data)=>{
+        that.setData({
+          orderStatus: data.status,
+          productsArr: data.snap_items,
+          account: data.total_price,
+          basicInfo:{
+            orderTime: data.create_time,
+            orderNo: data.order_no
+          }
+        });
+        //快照地址
+        var addressInfo = data.snap_address;
+        addressInfo.totalDetail = address.setAddressInfo(addressInfo);
+        that._bindAddressInfo(addressInfo);
+      })
+    }
   },
 
   /**

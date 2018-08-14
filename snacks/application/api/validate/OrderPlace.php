@@ -24,7 +24,7 @@ class OrderPlace extends BaseValidate
 
     protected function checkProducts($values)
     {
-        if (is_array($values)){
+        if (!is_array($values)){
             throw new ParamException([
                 'msg' => '商品参数不正确'
             ]);

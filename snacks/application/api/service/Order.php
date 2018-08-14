@@ -15,6 +15,7 @@ use app\api\model\UserAddress;
 use app\lib\exception\OrderException;
 use app\lib\exception\UserException;
 use app\api\model\Order as OrderModel;
+use think\Db;
 use think\Exception;
 
 class Order
@@ -44,8 +45,17 @@ class Order
         $order['pass'] = true;
         return $order;
     }
+    public function checkOrderStock($orderID)
+    {
+        $oProducts = OrderProduct::where('order_id','=',$orderID)->select();
+        $this->oProducts = $oProducts;
+        $this->products = $this->getProductsByOrder($oProducts);
+        $status = $this->getOrderStatus();
+        return $status;
+    }
     private function createOrder($snap)
     {
+        Db::startTrans();
         try{
             $orderNo = self::makeOrderNo();
             $order = new OrderModel();
@@ -66,13 +76,14 @@ class Order
             }
             $orderProduct = new OrderProduct();
             $orderProduct->saveAll($this->oProducts);
-
+            Db::commit();
             return [
                 'order_no' => $orderNo,
                 'order_id' => $orderID,
                 'create_time' => $create_time
             ];
         }catch (Exception $e){
+            Db::rollback();
             throw $e;
         }
     }
@@ -104,6 +115,7 @@ class Order
         if (count($this->products)>1){
             $snap['snapName'] .= '等';
         }
+        return $snap;
     }
     private function getUserAddress()
     {
@@ -126,7 +138,7 @@ class Order
         ];
 
         foreach ($this->oProducts as $oProduct){
-            $pStatus = $this->getProductStatus($oProduct['product_id'],$oProduct['count'],$this->products);
+            $pStatus = $this->getProductStatus($oProduct['product_id'],$oProduct['counts'],$this->products);
             if (!$pStatus['haveStock']){
                 $status['pass'] = false;
             }
@@ -174,8 +186,7 @@ class Order
         foreach ($oProducts as $oProduct){
             array_push($oPIDs,$oProduct['product_id']);
         }
-        $products = Product::all([$oPIDs])
-            ->visible(['id','price','stock','name','main_img_url']);
+        $products = Product::all($oPIDs);
         return $products;
     }
 }

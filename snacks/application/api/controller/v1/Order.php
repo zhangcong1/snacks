@@ -10,9 +10,13 @@ namespace app\api\controller\v1;
 
 
 use app\api\controller\BaseController;
+use app\api\validate\IDMustPositiveInt;
 use app\api\validate\OrderPlace;
 use app\api\service\Token as TokenService;
 use app\api\service\Order as OrderService;
+use app\api\model\Order as OrderModel;
+use app\lib\exception\OrderException;
+
 
 class Order extends BaseController
 {
@@ -26,6 +30,7 @@ class Order extends BaseController
      * 调用支付接口，进行支付
      * 还需要再次进行库存量检测
      * 服务器就可以调用微信的支付接口进行支付
+     * 小程序根据服务器返回的结果拉起微信支付
      * 微信会返回一个支付结果（异步）
      * 成功：进行库存量检查，进行库存量的扣除，失败：返回支付失败的结果
      * */
@@ -37,6 +42,16 @@ class Order extends BaseController
 
         $order = new OrderService();
         $status = $order->place($uid,$products);
-        return $status;
+        return json($status);
+    }
+
+    public function getDetail($id)
+    {
+        (new IDMustPositiveInt())->goCheck();
+        $orderDetail = OrderModel::get($id);
+        if (!$orderDetail){
+            throw new OrderException();
+        }
+        return json($orderDetail->hidden(['prepay_id']));
     }
 }
